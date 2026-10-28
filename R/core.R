@@ -220,11 +220,26 @@ rw_check_boot_args <- function(n_boot, conf_level) {
       n_boot < 1 || n_boot != round(n_boot)) {
     rw_stop("`n_boot` must be a positive whole number.")
   }
-  if (!is.numeric(conf_level) || length(conf_level) != 1L ||
-      !is.finite(conf_level) || conf_level <= 0 || conf_level >= 1) {
-    rw_stop("`conf_level` must be a single number between 0 and 1.")
+  rw_check_conf_level(conf_level)
+}
+
+rw_check_outcome <- function(outcome) {
+  if (!is.null(outcome) &&
+      (!is.character(outcome) || !length(outcome) || anyNA(outcome))) {
+    rw_stop("`outcome` must be a character vector of outcome names.")
   }
-  invisible(TRUE)
+  invisible(outcome)
+}
+
+rw_warn_multi_column <- function(terms) {
+  if (length(terms)) {
+    rw_warn("Term(s) ", rw_collapse(terms), " produce several model-matrix ",
+            "columns, each of which receives its own relative weight. For ",
+            "factors, polynomials and splines these weights, and the ",
+            "weights of the other predictors, depend on the contrasts or ",
+            "basis used to code the term.")
+  }
+  invisible(terms)
 }
 
 rw_check_dots <- function(dots, allowed, what) {

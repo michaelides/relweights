@@ -31,7 +31,8 @@ sign of its standardized coefficient (\code{"beta"}) or of its
 orthogonal-counterpart coefficient (\code{"orthogonal"}). Used by the
 \code{"weights"} and \code{"groups"} plots.}
 
-\item{ci}{Logical. Draw bootstrap intervals when they are available?}
+\item{ci}{Logical. Draw bootstrap or credible intervals when they are
+available?}
 
 \item{outcome}{Optional character vector of outcomes to plot.}
 
@@ -54,18 +55,22 @@ regression, sorted from the largest to the smallest weight, with one
 panel per regression. With \code{sign = "beta"} or \code{sign = "orthogonal"},
 each weight takes the sign of the standardized coefficient or of the
 orthogonal-counterpart coefficient (see \code{\link[=relweights]{relweights()}}). Bootstrap
-percentile intervals are drawn as error bars when available.}
+percentile intervals or, for Bayesian models, credible intervals are
+drawn as error bars when available.}
 \item{\code{"r2"}}{One bar per regression, divided into the raw weights of
-its predictors, so that the bar length is \eqn{R^2}. Bootstrap
-intervals for \eqn{R^2} are drawn when available.}
+its predictors, so that the bar length is \eqn{R^2}. Bootstrap or
+credible intervals for \eqn{R^2} are drawn when available.}
 \item{\code{"compare"}}{The relative weights next to two simpler indices of
 importance, the squared standardized coefficients and the squared
 zero-order correlations, each expressed as a percentage of its total
 over the predictors of the regression.}
 \item{\code{"groups"}}{A dot plot comparing the weight of each predictor
-across the groups and levels of a 'lavaan' model, with one panel per
-outcome. Requires a model with more than one group or level.}
+across the groups and levels of a 'lavaan' or 'blavaan' model, with
+one panel per outcome. Requires a model with more than one group or
+level.}
 }
+
+For Bayesian models, bars and points show posterior means.
 }
 \examples{
 fit <- lm(mpg ~ cyl + disp + hp + wt + qsec, data = mtcars)

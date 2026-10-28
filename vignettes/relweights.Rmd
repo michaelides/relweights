@@ -374,6 +374,13 @@ on data whose correlations equal the model-implied correlations. The suite
 also checks that the bootstrap replicates of a linear model equal those of
 rwa when the same seed is used.
 
+## Bayesian models
+
+Models fitted with brms (gaussian linear models) and blavaan (structural
+equation models) are analysed in every posterior draw. The results report
+posterior means, credible intervals, and the posterior probabilities of
+signs and ranks; see `vignette("bayesian")`.
+
 ## Caveats
 
 * Relative weights are a heuristic. They usually come very close to the

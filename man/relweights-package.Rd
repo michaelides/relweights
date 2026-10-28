@@ -18,6 +18,10 @@ The package works directly on fitted models:
 \code{\link[stats:lm]{stats::lm()}}, or for every structural regression in a model fitted with
 'lavaan' (see \code{\link[lavaan:sem]{lavaan::sem()}}). Optional bootstrap percentile intervals
 cover the raw weights, the rescaled weights and \eqn{R^2}.
+\item For Bayesian models fitted with 'brms' (gaussian linear models) or
+'blavaan' (structural equation models), \code{\link[=relweights]{relweights()}} computes the
+weights in every posterior draw and reports posterior means, credible
+intervals and posterior probabilities of signs and ranks.
 \item \code{\link[=autoplot.relweights]{autoplot.relweights()}} and \code{\link[=plot.relweights]{plot.relweights()}} draw the results with
 'ggplot2'.
 \item \code{\link[=print.relweights]{print.relweights()}} and \code{\link[=as.data.frame.relweights]{as.data.frame.relweights()}} display and
@@ -25,7 +29,8 @@ extract them.
 }
 
 Start with \code{vignette("relweights", package = "relweights")} for a worked
-introduction.
+introduction, and see \code{vignette("bayesian", package = "relweights")} for
+Bayesian models.
 }
 \references{
 Johnson, J. W. (2000). A heuristic method for estimating the relative weight
@@ -55,6 +60,26 @@ A reanalysis. \emph{Multivariate Behavioral Research, 49}(4), 329--338.
 
 Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
 \emph{Journal of Statistical Software, 48}(2), 1--36. \doi{10.18637/jss.v048.i02}
+
+Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for
+Bayesian regression models. \emph{The American Statistician, 73}(3), 307--309.
+\doi{10.1080/00031305.2018.1549100}
+
+Bürkner, P.-C. (2017). brms: An R package for Bayesian multilevel models
+using Stan. \emph{Journal of Statistical Software, 80}(1), 1--28.
+\doi{10.18637/jss.v080.i01}
+
+Merkle, E. C., Fitzsimmons, E., Uanhoro, J., & Goodrich, B. (2021).
+Efficient Bayesian structural equation modeling in Stan. \emph{Journal of
+Statistical Software, 100}(6), 1--22. \doi{10.18637/jss.v100.i06}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/michaelides/relweights}
+  \item Report bugs at \url{https://github.com/michaelides/relweights/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: George Michaelides \email{g.michaelides@uea.ac.uk}
