@@ -18,6 +18,10 @@ knitr::opts_chunk$set(
 
 # relweights
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/michaelides/relweights/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/michaelides/relweights/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 relweights computes Johnson's (2000) relative weights. They divide the
 explained variance ($R^2$) of a regression among correlated predictors. Each
 predictor is credited with its unique contribution and with its share of
@@ -97,11 +101,35 @@ intervals and the analysis of lavaan models in detail. The test suite checks
 the results against the [rwa](https://CRAN.R-project.org/package=rwa)
 package, which implements relative weights for data frames.
 
+## Citation
+
+If you use relweights in published work, please cite the package:
+
+```{r citation-text, echo = FALSE, results = "asis"}
+relweights_citation <- citation("relweights")
+cat(format(relweights_citation, style = "text"), sep = "\n")
+```
+
+A BibTeX entry for LaTeX users:
+
+```{r citation-bibtex, echo = FALSE, results = "asis"}
+cat(c("```bibtex", as.character(toBibtex(relweights_citation)), "```"),
+    sep = "\n")
+```
+
+Please also cite Johnson (2000) for the relative weights method and, when
+you analyse lavaan models, Rosseel (2012); see the references below. In R,
+`citation("relweights")` shows this information.
+
 ## References
 
 Johnson, J. W. (2000). A heuristic method for estimating the relative weight
 of predictor variables in multiple regression. *Multivariate Behavioral
 Research, 35*(1), 1--19. <https://doi.org/10.1207/S15327906MBR3501_1>
+
+Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
+*Journal of Statistical Software, 48*(2), 1--36.
+<https://doi.org/10.18637/jss.v048.i02>
 
 Tonidandel, S., & LeBreton, J. M. (2011). Relative importance analysis: A
 useful supplement to regression analysis. *Journal of Business and

@@ -10,3 +10,5 @@
 ^tests/testthat/Rplots\.pdf$
 ^\.Rhistory$
 ^build_install\.R$
+^LICENSE\.md$
+^\.github$

@@ -1,0 +1,18 @@
+citHeader("To cite relweights in publications, please use:")
+
+bibentry(
+  bibtype = "Manual",
+  key = "relweights",
+  title = paste("{relweights}: Relative Weight Analysis for Linear Models",
+                "and Structural Equation Models"),
+  author = person("George", "Michaelides"),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/michaelides/relweights"
+)
+
+citFooter(paste(
+  "Please also cite Johnson (2000) for the relative weights method",
+  "<doi:10.1207/S15327906MBR3501_1> and, when you analyse 'lavaan'",
+  "models, Rosseel (2012) <doi:10.18637/jss.v048.i02>."
+))
