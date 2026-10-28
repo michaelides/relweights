@@ -10,18 +10,22 @@
 #'     panel per regression. With `sign = "beta"` or `sign = "orthogonal"`,
 #'     each weight takes the sign of the standardized coefficient or of the
 #'     orthogonal-counterpart coefficient (see [relweights()]). Bootstrap
-#'     percentile intervals are drawn as error bars when available.}
+#'     percentile intervals or, for Bayesian models, credible intervals are
+#'     drawn as error bars when available.}
 #'   \item{`"r2"`}{One bar per regression, divided into the raw weights of
-#'     its predictors, so that the bar length is \eqn{R^2}. Bootstrap
-#'     intervals for \eqn{R^2} are drawn when available.}
+#'     its predictors, so that the bar length is \eqn{R^2}. Bootstrap or
+#'     credible intervals for \eqn{R^2} are drawn when available.}
 #'   \item{`"compare"`}{The relative weights next to two simpler indices of
 #'     importance, the squared standardized coefficients and the squared
 #'     zero-order correlations, each expressed as a percentage of its total
 #'     over the predictors of the regression.}
 #'   \item{`"groups"`}{A dot plot comparing the weight of each predictor
-#'     across the groups and levels of a 'lavaan' model, with one panel per
-#'     outcome. Requires a model with more than one group or level.}
+#'     across the groups and levels of a 'lavaan' or 'blavaan' model, with
+#'     one panel per outcome. Requires a model with more than one group or
+#'     level.}
 #' }
+#'
+#' For Bayesian models, bars and points show posterior means.
 #'
 #' @param object,x A `relweights` object.
 #' @param type The plot to draw: `"weights"`, `"r2"`, `"compare"` or
@@ -32,7 +36,8 @@
 #'   sign of its standardized coefficient (`"beta"`) or of its
 #'   orthogonal-counterpart coefficient (`"orthogonal"`). Used by the
 #'   `"weights"` and `"groups"` plots.
-#' @param ci Logical. Draw bootstrap intervals when they are available?
+#' @param ci Logical. Draw bootstrap or credible intervals when they are
+#'   available?
 #' @param outcome Optional character vector of outcomes to plot.
 #' @param ... For `autoplot()`, unused (must be empty). For `plot()`,
 #'   arguments passed to `autoplot()`.
@@ -119,6 +124,10 @@ rw_subset_outcome <- function(x, outcome) {
   x
 }
 
+rw_has_intervals <- function(x, ci) {
+  ci && !is.null(rw_interval_info(x))
+}
+
 # A factor identifying the regression of each row of x$weights, labelled
 # with the regression and (optionally) its R-squared.
 rw_regression_factor <- function(x, with_r2 = TRUE) {
@@ -144,7 +153,7 @@ rw_strip_within <- function(labels) sub("\r.*$", "", labels)
 rw_weight_values <- function(x, scale, sign) {
   d <- x$weights
   value <- d[[scale]]
-  if (is.null(x$boot)) {
+  if (is.null(rw_interval_info(x))) {
     lower <- upper <- rep(NA_real_, nrow(d))
   } else {
     lower <- d[[paste0(scale, "_lower")]]
@@ -179,16 +188,18 @@ rw_value_title <- function(scale, sign) {
 
 rw_caption <- function(x, sign, show_ci, what = "Error bars") {
   parts <- character()
+  if (!is.null(x$draws)) {
+    parts <- c(parts, "Estimates: posterior means.")
+  }
   if (sign == "beta") {
     parts <- c(parts, "Signs: standardized coefficients.")
   } else if (sign == "orthogonal") {
     parts <- c(parts, "Signs: orthogonal-counterpart coefficients.")
   }
   if (show_ci) {
-    parts <- c(parts, paste0(what, ": ", format(100 * x$boot$conf_level),
-                             "% percentile bootstrap intervals (",
-                             x$boot$n_boot - x$boot$n_failed,
-                             " replicates)."))
+    iv <- rw_interval_info(x)
+    unit <- if (iv$type == "credible") " posterior draws" else " replicates"
+    parts <- c(parts, paste0(what, ": ", iv$text, " (", iv$n, unit, ")."))
   }
   if (length(parts)) paste(parts, collapse = "\n") else NULL
 }
@@ -223,7 +234,7 @@ rw_theme <- function() {
 
 rw_plot_weights <- function(x, scale, sign, ci) {
   d <- rw_weight_values(x, scale, sign)
-  show_ci <- ci && !is.null(x$boot)
+  show_ci <- rw_has_intervals(x, ci)
   signed <- sign != "none"
   d$panel <- rw_regression_factor(x)
   d$y <- rw_within(d$predictor, d$value, d$panel)
@@ -285,7 +296,7 @@ rw_plot_weights <- function(x, scale, sign, ci) {
 rw_plot_r2 <- function(x, ci) {
   d <- x$weights
   r2 <- x$r2
-  show_ci <- ci && !is.null(x$boot)
+  show_ci <- rw_has_intervals(x, ci)
   lab <- rw_label(r2$outcome, r2$group, r2$level)
   key <- paste(d$block, d$outcome, sep = "\r")
   d$regression <- factor(lab[match(key, paste(r2$block, r2$outcome,
@@ -390,10 +401,11 @@ rw_plot_groups <- function(x, scale, sign, ci) {
   nlevels <- x$info$nlevels
   if (ngroups * nlevels < 2L) {
     rw_stop("type = \"groups\" compares weights across the groups or levels ",
-            "of a lavaan model; this analysis has a single group and level.")
+            "of a lavaan or blavaan model; this analysis has a single group ",
+            "and level.")
   }
   d <- rw_weight_values(x, scale, sign)
-  show_ci <- ci && !is.null(x$boot)
+  show_ci <- rw_has_intervals(x, ci)
   signed <- sign != "none"
   if (ngroups > 1L && nlevels > 1L) {
     d$block_label <- paste(d$group, d$level, sep = ", ")

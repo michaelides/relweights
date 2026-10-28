@@ -1,7 +1,7 @@
 Package: relweights
 Type: Package
 Title: Relative Weight Analysis for Linear Models and Structural Equation Models
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person("George", "Michaelides", email = "g.michaelides@uea.ac.uk",
            role = c("aut", "cre"))
@@ -15,7 +15,11 @@ Description: Relative weight analysis (Johnson, 2000,
     separately for each group and level. Results report raw and rescaled
     weights together with standardized coefficients, the coefficients of the
     orthogonal counterparts and zero-order correlations. Bootstrap percentile
-    confidence intervals and 'ggplot2' visualisations are available.
+    confidence intervals and 'ggplot2' visualisations are available. Bayesian
+    linear models fitted with 'brms' and Bayesian structural equation models
+    fitted with 'blavaan' are analysed in every posterior draw, giving
+    posterior means, credible intervals and posterior probabilities of signs
+    and ranks.
 License: GPL-3
 URL: https://github.com/michaelides/relweights
 BugReports: https://github.com/michaelides/relweights/issues
@@ -28,8 +32,11 @@ Imports:
     lavaan (>= 0.6-21),
     stats
 Suggests:
+    blavaan (>= 0.5-3),
+    brms (>= 2.20.0),
     knitr,
     MASS,
+    posterior (>= 1.5.0),
     rmarkdown,
     rwa (>= 1.0.1),
     testthat (>= 3.0.0)
