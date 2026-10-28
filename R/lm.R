@@ -13,7 +13,13 @@ relweights.lm <- function(object, bootstrap = FALSE, n_boot = 1000,
   rw_check_dots(dots, c("parallel", "ncpus", "cl"), "linear models")
 
   dat <- rw_lm_data(object)
-  rw_warn_multi_column(dat$multi_column_terms)
+  if (length(dat$multi_column_terms)) {
+    rw_warn("Term(s) ", rw_collapse(dat$multi_column_terms), " produce ",
+            "several model-matrix columns, each of which receives its own ",
+            "relative weight. For factors, polynomials and splines these ",
+            "weights, and the weights of the other predictors, depend on the ",
+            "contrasts or basis used to code the term.")
+  }
   constant <- rw_constant_cols(dat$M)
   if (length(constant)) {
     rw_stop("Variable(s) ", rw_collapse(constant), " have zero variance in ",

@@ -50,43 +50,6 @@ residual_cov_data <- function(n = 500) {
 }
 residual_cov_model <- "y ~ m\n m ~ x\n y ~~ m"
 
-# Bayesian models ----------------------------------------------------------
-
-# Small brms models saved by data-raw/brms-fixtures.R (fitting them would
-# compile Stan programs).
-brms_fixture <- function(name) {
-  readRDS(test_path("fixtures", paste0("brms-", name, ".rds")))
-}
-
-# brms models without draws, for testing which models are accepted; they are
-# built without compiling anything.
-brms_empty_data <- data.frame(
-  x = sin(1:40), z = cos(1.3 * (1:40)), g = rep(letters[1:4], 10),
-  w = rep(c(0.5, 1, 1.5, 2), 10), o = rep(1:3, length.out = 40),
-  b = rep(0:1, 20)
-)
-brms_empty_data$y <- brms_empty_data$x + 0.5 * brms_empty_data$z +
-  sin(2.1 * (1:40))
-
-empty_brm <- function(formula, family = gaussian()) {
-  suppressMessages(suppressWarnings(
-    brms::brm(formula, data = brms_empty_data, family = family, empty = TRUE)
-  ))
-}
-
-# blavaan models use precompiled Stan programs and take a few seconds.
-quiet_bsem <- function(..., burnin = 300, sample = 300) {
-  # blavaan::bsem() calls blavaan() in the frame it is called from, so the
-  # function must be visible there even when blavaan is not attached.
-  blavaan <- blavaan::blavaan
-  out <- NULL
-  utils::capture.output(out <- suppressMessages(suppressWarnings(
-    blavaan::bsem(..., burnin = burnin, sample = sample, n.chains = 2,
-                  seed = 1, bcontrol = list(cores = 1, refresh = 0))
-  )))
-  out
-}
-
 with_null_device <- function(code) {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)

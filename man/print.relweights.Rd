@@ -11,7 +11,7 @@
   x,
   row.names = NULL,
   optional = FALSE,
-  what = c("weights", "r2", "ranks", "pairwise"),
+  what = c("weights", "r2"),
   ...
 )
 }
@@ -27,41 +27,26 @@ correlations. Rescaled weights are shown with one decimal place.}
 \code{row.names}, when not \code{NULL}, replaces the row names and \code{optional} is
 ignored.}
 
-\item{what}{Which table to return: \code{"weights"} (one row per predictor),
-\code{"r2"} (one row per regression), or, for Bayesian models, \code{"ranks"} or
-\code{"pairwise"} (see Value).}
+\item{what}{Which table to return: \code{"weights"} (one row per predictor) or
+\code{"r2"} (one row per regression).}
 }
 \value{
-\code{print()} returns \code{x} invisibly. \code{as.data.frame()} returns a data
-frame:
-\describe{
-\item{\code{"weights"}, \code{"r2"}}{The \code{weights} or \code{r2} component of \code{x} (see
-the Value section of \code{\link[=relweights]{relweights()}}).}
-\item{\code{"ranks"}}{Bayesian models only. One row per predictor and rank,
-with the posterior probability (\code{probability}) that the predictor's
-raw weight has that rank in its regression (rank 1 is the largest
-weight).}
-\item{\code{"pairwise"}}{Bayesian models only. One row per ordered pair of
-predictors of a regression, with the posterior probability that the
-weight of \code{predictor} exceeds the weight of \code{other}.}
-}
+\code{print()} returns \code{x} invisibly. \code{as.data.frame()} returns the
+\code{weights} or the \code{r2} component of \code{x} (see the Value section of
+\code{\link[=relweights]{relweights()}}).
 }
 \description{
 \code{print()} shows, for every regression, \eqn{R^2}, the number of
 observations and a table of weights, standardized coefficients,
-correlations and signs. \code{as.data.frame()} returns one of the tables of
-results.
+correlations and signs. \code{as.data.frame()} returns the table of weights or
+the table of \eqn{R^2} values.
 }
 \details{
 In the printed table, \code{raw} holds the raw weights, \code{rescaled} the
 percentages of \eqn{R^2}, \code{beta} the standardized coefficients, \code{r} the
 zero-order correlations, and \code{sign} the signs of \code{beta} and of the
 orthogonal-counterpart coefficient \code{orth}, in that order (see
-\code{\link[=relweights]{relweights()}}). Intervals are bootstrap confidence intervals (\code{CI}) or,
-for Bayesian models, credible intervals (\code{CrI}). For Bayesian models, the
-estimates are posterior means, and a second table gives the posterior
-probabilities that \code{beta} and \code{orth} are positive and that each predictor
-has the largest weight of its regression.
+\code{\link[=relweights]{relweights()}}).
 }
 \examples{
 rw <- relweights(lm(mpg ~ wt + hp + qsec, data = mtcars))

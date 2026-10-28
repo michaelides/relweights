@@ -1,24 +1,3 @@
-# relweights 0.2.0
-
-* `relweights()` now analyses Bayesian models, computing the weights in every
-  posterior draw:
-  * linear models fitted with brms (gaussian family, identity link,
-    population-level effects only; multivariate models one response at a
-    time). R-squared is the model-based Bayesian R-squared of Gelman et al.
-    (2019); `r2_model` holds the residual-based value of `brms::bayes_R2()`.
-  * structural equation models fitted with blavaan, including multigroup
-    and two-level models. The model-implied correlations are recomputed in
-    every draw.
-* Results of Bayesian models report posterior means with equal-tailed
-  credible intervals, the posterior probabilities that `beta` and `orth` are
-  positive, and R-hat and bulk ESS of the raw weights. The per-draw results
-  are kept in `$draws`, and the new `ndraws` argument thins the draws.
-* `as.data.frame()` gains `what = "ranks"` and `what = "pairwise"`, which
-  return posterior rank probabilities and the probabilities that one weight
-  exceeds another.
-* `print()` and the plots label credible intervals as such.
-* New vignette: `vignette("bayesian")`.
-
 # relweights 0.1.0
 
 * First release.

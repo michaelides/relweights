@@ -12,5 +12,3 @@
 ^build_install\.R$
 ^LICENSE\.md$
 ^\.github$
-^data-raw$
-^vignettes/bayesian\.Rmd\.orig$

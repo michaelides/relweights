@@ -6,7 +6,10 @@ relweights.lavaan <- function(object, outcome = NULL, bootstrap = FALSE,
     rw_stop("relweights() supports models fitted with lavaan; objects of ",
             "class ", rw_collapse(class(object)[1L]), " are not supported.")
   }
-  rw_check_outcome(outcome)
+  if (!is.null(outcome) &&
+      (!is.character(outcome) || !length(outcome) || anyNA(outcome))) {
+    rw_stop("`outcome` must be a character vector of outcome names.")
+  }
   rw_check_flag(bootstrap, "bootstrap")
   rw_check_boot_args(n_boot, conf_level)
   dots <- list(...)
@@ -139,22 +142,17 @@ rw_lavaan_crosscheck <- function(object, specs, fits, tol = 1e-6) {
     r2_differs <- !is.na(s$r2_model) && abs(f$r2 - s$r2_model) > tol
     beta_differs || r2_differs
   }, logical(1))
-  rw_warn_implied(specs[differs])
-  invisible(differs)
-}
-
-rw_warn_implied <- function(specs) {
-  if (length(specs)) {
-    labels <- vapply(specs, function(s) s$label, character(1))
+  if (any(differs)) {
+    labels <- vapply(specs[differs], function(s) s$label, character(1))
     rw_warn("For ", rw_collapse(labels), ", the regression implied by the ",
             "model-implied correlations differs from the model's own ",
             "regression, because the outcome's residual is correlated with ",
             "its predictors (for example through a residual covariance or a ",
             "feedback loop). The relative weights, `beta` and `r2` describe ",
-            "the implied regression; `r2_model` holds the model's own ",
-            "R-squared.")
+            "the implied regression; `r2_model` holds the R-squared reported ",
+            "by lavaan.")
   }
-  invisible(specs)
+  invisible(differs)
 }
 
 rw_pick_formal <- function(formal_names, candidates) {

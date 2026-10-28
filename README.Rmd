@@ -34,11 +34,7 @@ The analysis works directly on fitted models:
 * **structural equation models** fitted with
   [lavaan](https://lavaan.ugent.be). Every structural regression is
   analysed, including regressions among latent variables, using the
-  model-implied correlations, separately for each group and level;
-* **Bayesian models** fitted with [brms](https://paulbuerkner.com/brms/)
-  (gaussian linear models) or [blavaan](https://blavaan.org/)
-  (structural equation models). The weights are computed in every
-  posterior draw.
+  model-implied correlations, separately for each group and level.
 
 Each analysis returns:
 
@@ -46,8 +42,7 @@ Each analysis returns:
 * standardized coefficients and zero-order correlations;
 * the signs of the standardized coefficients and of the coefficients of the
   orthogonal counterparts;
-* optional bootstrap percentile intervals or, for Bayesian models, credible
-  intervals and posterior probabilities of signs and ranks;
+* optional bootstrap percentile intervals;
 * ggplot2 plots.
 
 ## Installation
@@ -99,35 +94,12 @@ Other plots show how $R^2$ divides among the predictors
 standardized coefficients and squared correlations
 (`autoplot(rw, type = "compare")`).
 
-## Bayesian models
-
-For models fitted with brms or blavaan, the weights are computed in every
-posterior draw. The results report posterior means with credible intervals,
-the probabilities that the coefficients are positive, and the probabilities
-that each predictor ranks first, second, and so on. These models need Stan,
-so this code is not run here:
-
-```{r bayes, eval = FALSE}
-library(brms)
-brms_fit <- brm(mpg ~ cyl + disp + hp + wt + qsec, data = mtcars)
-rw_brms <- relweights(brms_fit)
-rw_brms
-as.data.frame(rw_brms, what = "ranks")
-
-library(blavaan)
-bsem_fit <- bsem(model, data = lavaan::HolzingerSwineford1939,
-                 group = "school")
-autoplot(relweights(bsem_fit), type = "groups")
-```
-
 ## Learn more
 
 `vignette("relweights")` covers the method, signs, factors, bootstrap
-intervals and the analysis of lavaan models in detail, and
-`vignette("bayesian")` the analysis of brms and blavaan models. The test
-suite checks the results against the
-[rwa](https://CRAN.R-project.org/package=rwa) package, which implements
-relative weights for data frames.
+intervals and the analysis of lavaan models in detail. The test suite checks
+the results against the [rwa](https://CRAN.R-project.org/package=rwa)
+package, which implements relative weights for data frames.
 
 ## Citation
 

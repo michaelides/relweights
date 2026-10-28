@@ -12,18 +12,13 @@
 #'   [stats::lm()], or for every structural regression in a model fitted with
 #'   'lavaan' (see [lavaan::sem()]). Optional bootstrap percentile intervals
 #'   cover the raw weights, the rescaled weights and \eqn{R^2}.
-#' * For Bayesian models fitted with 'brms' (gaussian linear models) or
-#'   'blavaan' (structural equation models), [relweights()] computes the
-#'   weights in every posterior draw and reports posterior means, credible
-#'   intervals and posterior probabilities of signs and ranks.
 #' * [autoplot.relweights()] and [plot.relweights()] draw the results with
 #'   'ggplot2'.
 #' * [print.relweights()] and [as.data.frame.relweights()] display and
 #'   extract them.
 #'
 #' Start with `vignette("relweights", package = "relweights")` for a worked
-#' introduction, and see `vignette("bayesian", package = "relweights")` for
-#' Bayesian models.
+#' introduction.
 #'
 #' @references
 #' Johnson, J. W. (2000). A heuristic method for estimating the relative weight
@@ -53,18 +48,6 @@
 #'
 #' Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
 #' *Journal of Statistical Software, 48*(2), 1--36. \doi{10.18637/jss.v048.i02}
-#'
-#' Gelman, A., Goodrich, B., Gabry, J., & Vehtari, A. (2019). R-squared for
-#' Bayesian regression models. *The American Statistician, 73*(3), 307--309.
-#' \doi{10.1080/00031305.2018.1549100}
-#'
-#' Bürkner, P.-C. (2017). brms: An R package for Bayesian multilevel models
-#' using Stan. *Journal of Statistical Software, 80*(1), 1--28.
-#' \doi{10.18637/jss.v080.i01}
-#'
-#' Merkle, E. C., Fitzsimmons, E., Uanhoro, J., & Goodrich, B. (2021).
-#' Efficient Bayesian structural equation modeling in Stan. *Journal of
-#' Statistical Software, 100*(6), 1--22. \doi{10.18637/jss.v100.i06}
 #'
 #' @keywords internal
 "_PACKAGE"
