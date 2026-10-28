@@ -1,0 +1,108 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  fig.width = 7,
+  fig.height = 4,
+  dpi = 96,
+  out.width = "100%"
+)
+```
+
+# relweights
+
+relweights computes Johnson's (2000) relative weights. They divide the
+explained variance ($R^2$) of a regression among correlated predictors. Each
+predictor is credited with its unique contribution and with its share of
+what it explains together with the other predictors. The weights are
+non-negative and sum to $R^2$.
+
+The analysis works directly on fitted models:
+
+* **linear models** fitted with `lm()`, including models with prior weights;
+* **structural equation models** fitted with
+  [lavaan](https://lavaan.ugent.be). Every structural regression is
+  analysed, including regressions among latent variables, using the
+  model-implied correlations, separately for each group and level.
+
+Each analysis returns:
+
+* raw weights and rescaled weights (percentages of $R^2$);
+* standardized coefficients and zero-order correlations;
+* the signs of the standardized coefficients and of the coefficients of the
+  orthogonal counterparts;
+* optional bootstrap percentile intervals;
+* ggplot2 plots.
+
+## Installation
+
+relweights is not yet on CRAN. Install the development version from
+[GitHub](https://github.com/michaelides/relweights):
+
+```r
+# install.packages("remotes")
+remotes::install_github("michaelides/relweights", build_vignettes = TRUE)
+```
+
+## Linear models
+
+```{r lm}
+library(relweights)
+
+fit <- lm(mpg ~ cyl + disp + hp + wt + qsec, data = mtcars)
+set.seed(2024)
+rw <- relweights(fit, bootstrap = TRUE, n_boot = 1000)
+rw
+```
+
+```{r lm-plot}
+autoplot(rw, sign = "beta")
+```
+
+## Structural equation models
+
+```{r lavaan}
+model <- "
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+  speed ~ visual + textual + ageyr + grade
+"
+sem_fit <- lavaan::sem(model, data = lavaan::HolzingerSwineford1939,
+                       group = "school")
+rw_sem <- relweights(sem_fit)
+rw_sem
+```
+
+```{r lavaan-plot}
+autoplot(rw_sem, type = "groups")
+```
+
+Other plots show how $R^2$ divides among the predictors
+(`autoplot(rw, type = "r2")`) and set relative weights next to squared
+standardized coefficients and squared correlations
+(`autoplot(rw, type = "compare")`).
+
+## Learn more
+
+`vignette("relweights")` covers the method, signs, factors, bootstrap
+intervals and the analysis of lavaan models in detail. The test suite checks
+the results against the [rwa](https://CRAN.R-project.org/package=rwa)
+package, which implements relative weights for data frames.
+
+## References
+
+Johnson, J. W. (2000). A heuristic method for estimating the relative weight
+of predictor variables in multiple regression. *Multivariate Behavioral
+Research, 35*(1), 1--19. <https://doi.org/10.1207/S15327906MBR3501_1>
+
+Tonidandel, S., & LeBreton, J. M. (2011). Relative importance analysis: A
+useful supplement to regression analysis. *Journal of Business and
+Psychology, 26*(1), 1--9. <https://doi.org/10.1007/s10869-010-9204-3>

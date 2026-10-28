@@ -1,0 +1,421 @@
+---
+title: "Relative weight analysis with relweights"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Relative weight analysis with relweights}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  dpi = 96,
+  out.width = "100%"
+)
+```
+
+When predictors are correlated, the coefficients of a regression describe
+the effect of each predictor with the others held constant. They do not say
+how much each predictor contributes to the variance the model explains.
+Relative weight analysis (Johnson, 2000) answers the second question. It
+divides the $R^2$ of a regression among the predictors. Each predictor is
+credited with its unique contribution and with a share of the contribution
+it makes together with correlated predictors. The weights are non-negative
+and add up to $R^2$.
+
+relweights computes the weights directly from fitted models:
+
+* linear models fitted with `lm()`;
+* structural equation models fitted with lavaan, including regressions
+  among latent variables, models with several groups, and two-level models.
+
+```{r}
+library(relweights)
+```
+
+## How the weights are computed
+
+Johnson's method replaces the correlated predictors $X$ by their
+*orthogonal counterparts* $Z$. These are the uncorrelated, standardized
+variables that are closest to $X$ in the least-squares sense. With the
+eigendecomposition $R_{xx} = V D V'$ of the predictor correlations,
+$\Lambda = V D^{1/2} V'$ holds the correlation between each predictor and
+each orthogonal counterpart. Because the counterparts are uncorrelated,
+regressing the outcome on them splits $R^2$ into additive parts
+$\gamma_k^2$, where $\gamma = \Lambda^{-1} r_{xy}$. Each part is then shared
+among the predictors in proportion to $\lambda_{jk}^2$:
+
+$$\epsilon_j = \sum_k \lambda_{jk}^2 \gamma_k^2, \qquad \sum_j \epsilon_j = R^2.$$
+
+The *raw weights* $\epsilon_j$ add up to $R^2$. The *rescaled weights*,
+$100\,\epsilon_j / R^2$, express them as percentages of $R^2$. The only
+input is the correlation matrix of the outcome and its predictors.
+
+* For a linear model, that matrix comes from the data used in the fit.
+* For a lavaan model, it is the model-implied correlation matrix, which also
+  contains the latent variables.
+
+## Linear models
+
+```{r}
+fit <- lm(mpg ~ cyl + disp + hp + wt + qsec, data = mtcars)
+rw <- relweights(fit)
+rw
+```
+
+The table lists:
+
+* the raw and rescaled weights;
+* the standardized regression coefficients (`beta`);
+* the zero-order correlations with the outcome (`r`);
+* two signs, which are discussed below.
+
+Weight (`wt`) accounts for almost a third of the explained variance. The
+three engine measures (`cyl`, `disp` and `hp`) are strongly intercorrelated,
+and they share most of the rest in similar proportions (18--22% each).
+Their standardized coefficients differ much more, and the coefficient of
+`disp` is even positive.
+
+`autoplot()` draws the weights with ggplot2. `plot()` does the same and
+prints the plot.
+
+```{r}
+autoplot(rw)
+```
+
+`as.data.frame()` returns the complete table:
+
+```{r}
+as.data.frame(rw)
+```
+
+`as.data.frame(rw, what = "r2")` returns one row per regression with
+$R^2$, the $R^2$ reported by the model and the number of observations.
+
+## Signs
+
+Relative weights carry no sign, but it is often useful to show the
+direction of each association next to its importance. relweights reports
+two signs:
+
+* `sign_beta` is the sign of the standardized coefficient in the full
+  regression, so it agrees with `coef(fit)`.
+* `sign_orth` is the sign of the coefficient of the predictor's orthogonal
+  counterpart (`orth`). RWA Web and the rwa package use this convention.
+
+The two usually agree, but they can differ when predictors are strongly
+correlated. Here is the regression of `mpg` on all other variables in
+`mtcars`:
+
+```{r}
+full <- relweights(lm(mpg ~ ., data = mtcars))
+subset(as.data.frame(full), predictor %in% c("disp", "hp", "wt"),
+       c(predictor, rescaled, beta, orth, r, sign_beta, sign_orth))
+```
+
+The correlation of displacement with `mpg` is $-0.85$, and its orthogonal
+counterpart is also negatively related to `mpg`. Once the other nine
+predictors are held constant, however, its coefficient is positive: a
+classic suppression pattern. `print()` lists such predictors below the
+table.
+
+To sign the bars of a plot, choose either convention:
+
+```{r, fig.height = 5}
+autoplot(full, sign = "beta")
+```
+
+## Factors and other terms with several columns
+
+Each column of the model matrix is a predictor. A factor with more than two
+levels, a `poly()` term or a spline basis therefore receives one weight per
+column, and relweights warns that these weights depend on how the term is
+coded:
+
+```{r}
+rw_cyl <- relweights(lm(mpg ~ factor(cyl) + wt + hp, data = mtcars))
+```
+
+The dependence is real. Correlations between dummy variables change with
+the reference level, so the weights of *all* predictors change, although
+$R^2$ does not:
+
+```{r}
+by_reference <- sapply(c("4", "6", "8"), function(ref) {
+  d <- transform(mtcars, cyl = relevel(factor(cyl), ref = ref))
+  w <- suppressWarnings(relweights(lm(mpg ~ cyl + wt + hp, data = d)))$weights
+  c(cyl = sum(w$raw[w$term == "cyl"]), wt = w$raw[w$predictor == "wt"],
+    hp = w$raw[w$predictor == "hp"])
+})
+colnames(by_reference) <- paste("reference", c("4", "6", "8"))
+round(by_reference, 3)
+```
+
+When you report such weights, say which coding was used and check how much
+the weights change under other codings.
+
+Product terms raise a related issue. Interaction and power columns are
+correlated with their components unless the components are centred, and
+these correlations affect the weights. Two-level factors and other terms
+that produce a single column are not affected.
+
+Prior weights are supported. `lm(..., weights = w)` leads to weighted
+correlations, which reproduce the weighted $R^2$ of the model.
+
+## Bootstrap confidence intervals
+
+With `bootstrap = TRUE`, the rows of the data are resampled with
+`boot::boot()` and the analysis is repeated in every resample. The result
+contains percentile intervals for the raw weights, the rescaled weights and
+$R^2$. Call `set.seed()` first to make the intervals reproducible.
+
+```{r}
+set.seed(2024)
+rw_boot <- relweights(fit, bootstrap = TRUE, n_boot = 1000)
+rw_boot
+autoplot(rw_boot)
+```
+
+Keep two points in mind when reading these intervals.
+
+* Raw weights cannot be negative, so the interval of a predictor that is
+  unrelated to the outcome still lies above zero. An interval that excludes
+  zero is therefore not a significance test (Tonidandel et al., 2009).
+* Rescaled weights are shares of a whole. Their intervals are best read
+  descriptively.
+
+The $R^2$ plot shows how the explained variance divides among the
+predictors, with the interval for $R^2$ drawn below the bar:
+
+```{r, fig.height = 3}
+autoplot(rw_boot, type = "r2")
+```
+
+## Structural equation models
+
+### Regressions among latent variables
+
+For a lavaan model, relweights analyses every regression defined with `~`.
+It uses the model-implied correlations among all observed and latent
+variables. This is the political democracy model from the lavaan tutorial:
+
+```{r}
+pd_model <- "
+  ind60 =~ x1 + x2 + x3
+  dem60 =~ y1 + y2 + y3 + y4
+  dem65 =~ y5 + y6 + y7 + y8
+  dem60 ~ ind60
+  dem65 ~ ind60 + dem60
+  y1 ~~ y5
+  y2 ~~ y4 + y6
+  y3 ~~ y7
+  y4 ~~ y8
+  y6 ~~ y8
+"
+pd_fit <- lavaan::sem(pd_model, data = lavaan::PoliticalDemocracy)
+rw_pd <- relweights(pd_fit)
+rw_pd
+```
+
+Both $R^2$ values equal those reported by lavaan
+(`lavaan::lavInspect(pd_fit, "rsquare")`), and `beta` equals the
+standardized coefficients of `lavaan::standardizedSolution()`. Use the
+`outcome` argument to analyse only some of the regressions, for example
+`relweights(pd_fit, outcome = "dem65")`.
+
+Latent variables are free of the measurement error described by the
+measurement model. For comparison, here is the same regression on simple
+scale averages:
+
+```{r}
+d <- lavaan::PoliticalDemocracy
+scores <- data.frame(
+  ind60 = rowMeans(scale(d[, c("x1", "x2", "x3")])),
+  dem60 = rowMeans(d[, c("y1", "y2", "y3", "y4")]),
+  dem65 = rowMeans(d[, c("y5", "y6", "y7", "y8")])
+)
+rw_scores <- relweights(lm(dem65 ~ ind60 + dem60, data = scores))
+rw_scores$r2$r2
+rw_scores$weights[, c("predictor", "raw", "rescaled")]
+```
+
+With averages, $R^2$ drops from 0.96 to 0.77. In this example the shares of
+the two predictors stay almost the same (about 19% and 81%).
+
+### Several groups and levels
+
+Models with several groups are analysed group by group. This model mixes
+latent predictors (`visual`, `textual`) with observed ones (`ageyr`,
+`grade`), and is fitted separately to the two schools of the
+Holzinger--Swineford data:
+
+```{r, fig.height = 4.5}
+hs_model <- "
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+  speed ~ visual + textual + ageyr + grade
+"
+hs_fit <- lavaan::sem(hs_model, data = lavaan::HolzingerSwineford1939,
+                      group = "school")
+rw_hs <- relweights(hs_fit)
+rw_hs$r2
+autoplot(rw_hs)
+```
+
+The `"groups"` plot sets the groups side by side:
+
+```{r}
+autoplot(rw_hs, type = "groups")
+```
+
+Two-level models are analysed at each level. Column `n` counts observations
+at the first level and clusters at the second:
+
+```{r}
+ml_model <- "
+  level: 1
+    fw =~ y1 + y2 + y3
+    fw ~ x1 + x2 + x3
+  level: 2
+    fb =~ y1 + y2 + y3
+    fb ~ w1 + w2
+"
+ml_fit <- lavaan::sem(ml_model, data = lavaan::Demo.twolevel,
+                      cluster = "cluster")
+relweights(ml_fit)$r2
+```
+
+### Bootstrap intervals
+
+For lavaan models, the bootstrap refits the model to every resample with
+`lavaan::lavBootstrap()`, which takes longer than for a linear model. It
+requires a model fitted to raw data and is not available for two-level
+models. Use at least 1000 replicates for reporting; fewer are used here to
+keep the vignette fast.
+
+```{r, fig.height = 3}
+hs_single <- lavaan::sem(hs_model, data = lavaan::HolzingerSwineford1939)
+set.seed(2024)
+rw_hs_boot <- relweights(hs_single, bootstrap = TRUE, n_boot = 200)
+rw_hs_boot
+autoplot(rw_hs_boot, type = "r2")
+```
+
+Replicates whose solution is not admissible (for example, with a negative
+variance) are kept and counted. Replicates that cannot be analysed (for
+example, when the model does not converge) are excluded with a warning.
+
+### When the implied regression differs from the model
+
+In most models, the residual of an outcome is uncorrelated with its
+predictors. The regression implied by the model-implied correlations then
+coincides with the structural regression. In other models it does not, for
+example when the outcome's residual covaries with one of its predictors.
+relweights then warns, and `r2_model` keeps the $R^2$ reported by lavaan:
+
+```{r}
+set.seed(1)
+n <- 500
+x <- rnorm(n)
+u <- rnorm(n)
+m <- x + u + rnorm(n)
+y <- 0.5 * m + u + rnorm(n)
+iv_fit <- lavaan::sem("y ~ m\n m ~ x\n y ~~ m", data = data.frame(x, m, y))
+rw_iv <- relweights(iv_fit, outcome = "y")
+rw_iv$r2
+```
+
+The weights then describe the linear prediction of the outcome from its
+predictors, not the structural equation.
+
+### Ordered variables
+
+For ordered categorical variables, correlations refer to the underlying
+latent responses. When some endogenous variables are ordered, lavaan
+conditions on the exogenous covariates by default (`conditional.x = TRUE`),
+and these covariates are then missing from the implied correlation matrix.
+Refit with `conditional.x = FALSE` to include them in the analysis.
+
+## Comparing importance indices
+
+Relative weights are one of several indices of importance. The comparison
+plot sets them next to the squared standardized coefficients and the squared
+zero-order correlations, each scaled to sum to 100:
+
+```{r, fig.height = 4.5}
+autoplot(rw, type = "compare")
+```
+
+Squared standardized coefficients describe each predictor with the others
+held constant, and squared correlations describe each predictor on its own.
+Relative weights combine both views. With correlated predictors, the other
+two indices can disagree sharply, as they do for `wt` and `hp` here.
+
+## Agreement with the rwa package
+
+The rwa package (Chan) implements relative weights for data frames. The
+weights computed here agree with it to machine precision:
+
+```{r, eval = requireNamespace("rwa", quietly = TRUE)}
+reference <- rwa::rwa(mtcars, "mpg", c("cyl", "disp", "hp", "wt", "qsec"),
+                      method = "multiple", sort = FALSE)
+all.equal(rw$weights$raw, reference$result$Raw.RelWeight)
+all.equal(rw$r2$r2, reference$rsquare)
+```
+
+The test suite of relweights checks this agreement for unweighted and
+weighted linear models and for lavaan models. For lavaan models, rwa is run
+on data whose correlations equal the model-implied correlations. The suite
+also checks that the bootstrap replicates of a linear model equal those of
+rwa when the same seed is used.
+
+## Caveats
+
+* Relative weights are a heuristic. They usually come very close to the
+  general dominance weights of dominance analysis (Johnson, 2000), which
+  are much more expensive to compute, but Thomas et al. (2014) criticise
+  the theoretical basis of the method. Relative weights describe how a
+  regression divides the explained variance; they are not causal effects.
+* Weights depend on the set of predictors. Adding or removing a correlated
+  predictor redistributes the shares.
+* For terms coded with several columns, the weights depend on the coding
+  (see above).
+* Relative weights are estimates. Report bootstrap intervals, and use
+  enough observations for the weights to be stable.
+
+## References
+
+Johnson, J. W. (2000). A heuristic method for estimating the relative weight
+of predictor variables in multiple regression. *Multivariate Behavioral
+Research, 35*(1), 1--19. https://doi.org/10.1207/S15327906MBR3501_1
+
+Johnson, J. W., & LeBreton, J. M. (2004). History and use of relative
+importance indices in organizational research. *Organizational Research
+Methods, 7*(3), 238--257. https://doi.org/10.1177/1094428104266510
+
+Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
+*Journal of Statistical Software, 48*(2), 1--36.
+https://doi.org/10.18637/jss.v048.i02
+
+Thomas, D. R., Zumbo, B. D., Kwan, E., & Schweitzer, L. (2014). On Johnson's
+(2000) relative weights method for assessing variable importance: A
+reanalysis. *Multivariate Behavioral Research, 49*(4), 329--338.
+https://doi.org/10.1080/00273171.2014.905766
+
+Tonidandel, S., & LeBreton, J. M. (2011). Relative importance analysis: A
+useful supplement to regression analysis. *Journal of Business and
+Psychology, 26*(1), 1--9. https://doi.org/10.1007/s10869-010-9204-3
+
+Tonidandel, S., & LeBreton, J. M. (2015). RWA Web: A free, comprehensive,
+web-based, and user-friendly tool for relative weight analyses. *Journal of
+Business and Psychology, 30*(2), 207--216.
+https://doi.org/10.1007/s10869-014-9351-z
+
+Tonidandel, S., LeBreton, J. M., & Johnson, J. W. (2009). Determining the
+statistical significance of relative weights. *Psychological Methods,
+14*(4), 387--399. https://doi.org/10.1037/a0017735

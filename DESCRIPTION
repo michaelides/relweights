@@ -1,0 +1,39 @@
+Package: relweights
+Type: Package
+Title: Relative Weight Analysis for Linear Models and Structural Equation Models
+Version: 0.1.0
+Authors@R: 
+    person("George", "Michaelides", email = "g.michaelides@uea.ac.uk",
+           role = c("aut", "cre"))
+Description: Relative weight analysis (Johnson, 2000,
+    <doi:10.1207/S15327906MBR3501_1>) divides the explained variance
+    (R-squared) of a regression among correlated predictors. The analysis
+    works directly on fitted linear models from stats::lm() and on structural
+    equation models fitted with 'lavaan'. For 'lavaan' models, the weights of
+    every structural regression, including regressions among latent
+    variables, are computed from the model-implied correlation matrix,
+    separately for each group and level. Results report raw and rescaled
+    weights together with standardized coefficients, the coefficients of the
+    orthogonal counterparts and zero-order correlations. Bootstrap percentile
+    confidence intervals and 'ggplot2' visualisations are available.
+License: GPL-3
+URL: https://github.com/michaelides/relweights
+BugReports: https://github.com/michaelides/relweights/issues
+Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
+Imports:
+    boot,
+    ggplot2 (>= 3.5.0),
+    lavaan (>= 0.6-21),
+    stats
+Suggests:
+    knitr,
+    MASS,
+    rmarkdown,
+    rwa (>= 1.0.1),
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

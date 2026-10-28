@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^instructions\.md$
+^README\.Rmd$
+^doc$
+^Meta$
+^\.codegraph$
+^relweights\.Rcheck$
+^relweights_.*\.tar\.gz$
+^tests/testthat/Rplots\.pdf$
+^\.Rhistory$
+^build_install\.R$
